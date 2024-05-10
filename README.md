@@ -46,3 +46,85 @@ java Main 3
 ```
 
 ## Benchmarking
+
+There are certainly more efficient ways of generating magic squares. The purpose of this project however was to solve this problem as a CSP applying a backtracking algorithm. I've implemented the algorithm in a way that it always choose a random empty cell of the square to fill, and proceeds given that this action conforms to the constraints of the problem. That means that at every execution the program follows a different recursion path, so it's execution will vary in time and in number of visited nodes.
+
+### Without forward checking
+
+On the table below you can check how the algorithm without forward checking behaved for 3x3 and 4x4 magic squares in 10 different attempts. I've sorted the data in ascending order considering the number of nodes visited (equivalent to the number of times the recursive backtracking function is called).
+
+| Attempt | 3x3 Nodes Visited | 3x3 Time Taken (ms) | 4x4 Nodes Visited | 4x4 Time Taken (ms) |
+| ------- | ----------------- | ------------------- | ----------------- | ------------------- |
+| 1       | 394               | 5                   | 3,500,156         | 1,234               |
+| 2       | 554               | 6                   | 4,867,672         | 1,600               |
+| 3       | 936               | 6                   | 5,111,494         | 1,722               |
+| 4       | 1,028             | 7                   | 5,522,682         | 1,803               |
+| 5       | 1,087             | 7                   | 5,706,364         | 1,739               |
+| 6       | 1,513             | 7                   | 10,152,537        | 4,218               |
+| 7       | 1,520             | 8                   | 15,243,314        | 6,466               |
+| 8       | 1,553             | 7                   | 29,042,001        | 13,777              |
+| 9       | 2,143             | 7                   | 34,114,131        | 12,611              |
+| 10      | 2,621             | 8                   | 45,909,711        | 20,609              |
+
+![benchmark without forward checking](./benchmarking-without-forward-checking.png)
+
+### With forward checking
+
+| Attempt | 3x3 Nodes Visited | 3x3 Time Taken (ms) | 4x4 Nodes Visited | 4x4 Time Taken (ms) |
+| ------- | ----------------- | ------------------- | ----------------- | ------------------- |
+| 1       | 17                | 4                   | 134,380           | 566                 |
+| 2       | 70                | 7                   | 295,730           | 1,202               |
+| 3       | 82                | 7                   | 851,702           | 2,774               |
+| 4       | 85                | 7                   | 1,455,105         | 6,001               |
+| 5       | 326               | 10                  | 1,524,314         | 6,466               |
+| 6       | 372               | 10                  | 1,668,323         | 7,348               |
+| 7       | 461               | 11                  | 3,491,014         | 15,854              |
+| 8       | 545               | 12                  | 3,712,188         | 16,197              |
+| 9       | 621               | 12                  | 6,324,154         | 22,841              |
+| 10      | 1,046             | 14                  | 7,076,191         | 28,206              |
+
+![benchmark with forward checking](./benchmarking-with-forward-checking.png)
+
+### Comparison Recursive Backtracking `With x Without` Forward Checking (3x3 squares).
+
+| Attempt | Without FC: Nodes | Without FC: Time (ms) | With FC: Nodes | With FC: Time (ms) |
+| ------- | ----------------- | --------------------- | -------------- | ------------------ |
+| 1       | 394               | 5                     | 17             | 4                  |
+| 2       | 554               | 6                     | 70             | 7                  |
+| 3       | 936               | 6                     | 82             | 7                  |
+| 4       | 1,028             | 7                     | 85             | 7                  |
+| 5       | 1,087             | 7                     | 326            | 10                 |
+| 6       | 1,513             | 7                     | 372            | 10                 |
+| 7       | 1,520             | 8                     | 461            | 11                 |
+| 8       | 1,553             | 7                     | 545            | 12                 |
+| 9       | 2,143             | 7                     | 621            | 12                 |
+| 10      | 2,621             | 8                     | 1,046          | 14                 |
+
+![comparison3x3](./comparison3x3.png)
+
+### Comparison Recursive Backtracking `With x Without` Forward Checking (4x4 squares).
+
+| Attempt | Without FC: Nodes | Without FC: Time (ms) | With FC: Nodes | With FC: Time (ms) |
+| ------- | ----------------- | --------------------- | -------------- | ------------------ |
+| 1       | 3,500,156         | 1,234                 | 134,380        | 566                |
+| 2       | 4,867,672         | 1,600                 | 295,730        | 1,202              |
+| 3       | 5,111,494         | 1,722                 | 851,702        | 2,774              |
+| 4       | 5,522,682         | 1,803                 | 1,455,105      | 6,001              |
+| 5       | 5,706,364         | 1,739                 | 1,524,314      | 6,466              |
+| 6       | 10,152,537        | 4,218                 | 1,668,323      | 7,348              |
+| 7       | 15,243,314        | 6,466                 | 3,491,014      | 15,854             |
+| 8       | 29,042,001        | 13,777                | 3,712,188      | 16,197             |
+| 9       | 34,114,131        | 12,611                | 6,324,154      | 22,841             |
+| 10      | 45,909,711        | 20,609                | 7,076,191      | 28,206             |
+
+![comparison4x4](./comparison4x4.png)
+
+## Conclusion
+
+### Pros of forward checking
+
+Forward checking significantly reduces the search space by preemptively eliminating potential values that do not satisfy the constraints before they are even tried in the square. This is evident from the statistics showing a drastic reduction in the number of nodes visited for many of the runs with forward checking compared to those without. This method helps avoid deep recursion paths that do not lead to a solution, which is particularly advantageous in larger 4x4 squares where the complexity and possibilities increase exponentially.
+
+### Cons of forward checking
+
+Despite the reduction in nodes visited, forward checking involves additional computational overhead due to the need to manage and update domains—sets of possible values that can occupy specific cells based on current partial solutions. The code must handle the creation of deep copies of domains for each recursive call, and it must consistently update these domains whenever a value is placed in a magic square. This can result in increased computation times, as seen in some instances where the time taken with forward checking was higher than without, despite fewer nodes being visited.
